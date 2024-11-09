@@ -27,12 +27,24 @@ pub fn main() {
 }
 
 type Model {
-  Model(route: Route, email: String, password: String, lang: Lang)
+  Model(
+    route: Route,
+    email: String,
+    password: String,
+    input_color: String,
+    lang: Lang,
+  )
 }
 
 fn init(_flags) -> #(Model, Effect(Msg)) {
   #(
-    Model(route: Login, email: "", password: "", lang: config.en),
+    Model(
+      route: Login,
+      email: "",
+      password: "",
+      input_color: "",
+      lang: config.en,
+    ),
     effect.none(),
   )
 }
@@ -49,7 +61,7 @@ type Msg {
 
 fn login(model: Model) -> Effect(Msg) {
   lustre_http.send(
-    request.to("http://localhost:8000")
+    request.to("http://localhost:8000" <> "/login")
       |> result.lazy_unwrap(fn() { request.new() })
       |> request.set_method(http.Post)
       |> request.set_header("Content-Type", "application/x-www-form-urlencoded")
@@ -66,12 +78,24 @@ fn update(model: Model, msg: Msg) {
 
     GotLoginData(Ok(user)) ->
       case user {
-        "admin" -> #(Model(..model, route: Admin), effect.none())
-        "student" -> #(Model(..model, route: Student), effect.none())
-        _ -> #(Model(..model, route: Login), effect.none())
+        "admin" -> #(
+          Model(..model, input_color: "", route: Admin),
+          effect.none(),
+        )
+        "student" -> #(
+          Model(..model, input_color: "", route: Student),
+          effect.none(),
+        )
+        _ -> #(
+          Model(..model, route: Login, input_color: "input-secondary"),
+          effect.none(),
+        )
       }
 
-    GotLoginData(Error(_)) -> #(model, effect.none())
+    GotLoginData(Error(_)) -> #(
+      Model(..model, input_color: "input-secondary"),
+      effect.none(),
+    )
 
     PasswordChanged(password) -> #(
       Model(..model, password: password),
@@ -138,7 +162,11 @@ fn view(model: Model) -> Element(Msg) {
                         ]),
                         html.input([
                           attribute.required(True),
-                          attribute.class("input placeholder-gray-200"),
+                          attribute.class(
+                            "input "
+                            <> model.input_color
+                            <> " placeholder-gray-200",
+                          ),
                           event.on_input(EmailChanged),
                           attribute.placeholder(model.lang.email_placeholder),
                           attribute.type_("email"),
@@ -153,7 +181,11 @@ fn view(model: Model) -> Element(Msg) {
                         ]),
                         html.input([
                           attribute.required(True),
-                          attribute.class("input placeholder-gray-300"),
+                          attribute.class(
+                            "input "
+                            <> model.input_color
+                            <> " placeholder-gray-200",
+                          ),
                           attribute.placeholder(model.lang.password_placeholder),
                           event.on_input(PasswordChanged),
                           attribute.type_("password"),

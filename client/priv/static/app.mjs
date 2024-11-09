@@ -3296,11 +3296,12 @@ var Student = class extends CustomType {
 var Login = class extends CustomType {
 };
 var Model2 = class extends CustomType {
-  constructor(route, email, password, lang) {
+  constructor(route, email, password, input_color, lang) {
     super();
     this.route = route;
     this.email = email;
     this.password = password;
+    this.input_color = input_color;
     this.lang = lang;
   }
 };
@@ -3331,12 +3332,12 @@ var GotLoginData = class extends CustomType {
   }
 };
 function init2(_) {
-  return [new Model2(new Login(), "", "", en), none()];
+  return [new Model2(new Login(), "", "", "", en), none()];
 }
 function login(model) {
   return send2(
     (() => {
-      let _pipe = to("http://localhost:8000");
+      let _pipe = to("http://localhost:8000/login");
       let _pipe$1 = lazy_unwrap(
         _pipe,
         () => {
@@ -3365,14 +3366,26 @@ function update(model, msg) {
   } else if (msg instanceof GotLoginData && msg[0].isOk()) {
     let user = msg[0][0];
     if (user === "admin") {
-      return [model.withFields({ route: new Admin() }), none()];
+      return [
+        model.withFields({ input_color: "", route: new Admin() }),
+        none()
+      ];
     } else if (user === "student") {
-      return [model.withFields({ route: new Student() }), none()];
+      return [
+        model.withFields({ input_color: "", route: new Student() }),
+        none()
+      ];
     } else {
-      return [model.withFields({ route: new Login() }), none()];
+      return [
+        model.withFields({ route: new Login(), input_color: "input-secondary" }),
+        none()
+      ];
     }
   } else if (msg instanceof GotLoginData && !msg[0].isOk()) {
-    return [model, none()];
+    return [
+      model.withFields({ input_color: "input-secondary" }),
+      none()
+    ];
   } else if (msg instanceof PasswordChanged) {
     let password = msg[0];
     return [model.withFields({ password }), none()];
@@ -3573,7 +3586,9 @@ function view(model) {
                             input(
                               toList([
                                 required(true),
-                                class$("input placeholder-gray-200"),
+                                class$(
+                                  "input " + model.input_color + " placeholder-gray-200"
+                                ),
                                 on_input(
                                   (var0) => {
                                     return new EmailChanged(var0);
@@ -3603,7 +3618,9 @@ function view(model) {
                             input(
                               toList([
                                 required(true),
-                                class$("input placeholder-gray-300"),
+                                class$(
+                                  "input " + model.input_color + " placeholder-gray-200"
+                                ),
                                 placeholder(
                                   model.lang.password_placeholder
                                 ),

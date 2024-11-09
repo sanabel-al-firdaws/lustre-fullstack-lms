@@ -19,10 +19,7 @@ fn cors() {
 pub fn handle_request(req: Request) -> Response {
   use req <- cors.wisp_middleware(req, cors())
 
-  // For GET requests, show the form,
-  // for POST requests we use the data from the form
   case req.method {
-    // Get -> show_form()
     Post -> handle_form_submission(req)
     _ -> wisp.method_not_allowed(allowed: [Post])
   }

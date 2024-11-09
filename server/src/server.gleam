@@ -1,4 +1,5 @@
 import cors_builder as cors
+import gleam/erlang/os
 import gleam/erlang/process
 import gleam/http
 import gleam/io
@@ -18,17 +19,14 @@ fn cors() {
 pub fn main() {
   // Start a database connection pool.
   // Typically you will want to create one pool for use in your program
-  let _db =
-    pgo.connect(
-      pgo.Config(
-        ..pgo.default_config(),
-        password: Some("postgres"),
-        pool_size: 15,
-      ),
-    )
+
+  let assert Ok(secret_key_base) = os.get_env("SECRET_KEY_BASE")
+  let assert Ok(url) = os.get_env("DATABASE_URL")
+  let assert Ok(config) = pgo.url_config(url)
+  let db = pgo.connect(config)
 
   wisp.configure_logger()
-  let secret_key_base = wisp.random_string(64)
+  // let secret_key_base = wisp.random_string(64)
 
   let server =
     wisp_mist.handler(router.handle_request, secret_key_base)
